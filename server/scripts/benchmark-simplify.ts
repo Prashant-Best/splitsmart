@@ -123,12 +123,12 @@ function compare(title: string, clusters: number): void {
     greedyTotal += greedy;
     out(
       `| ${n} | ${(pair / runs).toFixed(1)} | ${(greedy / runs).toFixed(2)} | ${(exact / runs).toFixed(2)} | ` +
-        `${((100 * optimal) / runs).toFixed(1)}% | ${worstGap} | ${maxGreedy} (${n - 1}) |`,
+        `${((100 * optimal) / runs).toFixed(2)}% | ${worstGap} | ${maxGreedy} (${n - 1}) |`,
     );
   }
   out(
     `\nGreedy matched the exact optimum in ${optimalCount.toLocaleString('en-IN')} of ${total.toLocaleString('en-IN')} groups ` +
-      `(${((100 * optimalCount) / total).toFixed(1)}%) and cut the number of payments by ` +
+      `(${((100 * optimalCount) / total).toFixed(2)}%) and cut the number of payments by ` +
       `${(100 * (1 - greedyTotal / pairTotal)).toFixed(0)}% compared with paying every pairwise debt.`,
   );
 }

@@ -23,6 +23,8 @@ import { compactMoney, formatMoney, formatMonth, formatShortMonth } from '../lib
 import { EmptyState, Spinner } from './ui/Misc';
 import { Segmented } from './ui/Segmented';
 
+// Bars are drawn without the grow-in animation: it runs on requestAnimationFrame, so in a
+// background tab the bars (and their value labels) would stay invisible until it finished.
 const PERIODS = [
   { value: '3', label: '3 months' },
   { value: '6', label: '6 months' },
@@ -184,6 +186,7 @@ function MonthlyChart({ stats }: { stats: Stats }) {
             radius={[4, 4, 0, 0]}
             maxBarSize={24}
             activeBar={{ fillOpacity: 0.8 }}
+            isAnimationActive={false}
           />
         </BarChart>
       </ResponsiveContainer>
@@ -244,6 +247,7 @@ function CategoryChart({ stats }: { stats: Stats }) {
             radius={[0, 4, 4, 0]}
             maxBarSize={20}
             activeBar={{ fillOpacity: 0.8 }}
+            isAnimationActive={false}
           >
             <LabelList
               dataKey="total"
@@ -350,6 +354,7 @@ function MemberChart({ stats, group }: { stats: Stats; group: Group }) {
             radius={[0, 4, 4, 0]}
             maxBarSize={12}
             activeBar={{ fillOpacity: 0.8 }}
+            isAnimationActive={false}
           />
           <Bar
             dataKey="share"
@@ -358,6 +363,7 @@ function MemberChart({ stats, group }: { stats: Stats; group: Group }) {
             radius={[0, 4, 4, 0]}
             maxBarSize={12}
             activeBar={{ fillOpacity: 0.8 }}
+            isAnimationActive={false}
           />
         </BarChart>
       </ResponsiveContainer>

@@ -1,0 +1,87 @@
+# The full stack: MongoDB replica set + API + web app (nginx) + Mailpit for reminder emails.
+#
+#   docker compose up -d --build                      # http://localhost:8080
+#   docker compose --profile tools run --rm seed      # optional demo data
+#   open http://localhost:8025                        # emails caught by Mailpit
+name: splitsmart
+
+x-api-env: &api-env
+  NODE_ENV: production
+  MONGODB_URI: mongodb://mongo:27017/splitsmart?replicaSet=rs0
+  # Set your own for anything beyond local use: JWT_SECRET=... docker compose up
+  JWT_SECRET: ${JWT_SECRET:-local-docker-secret-replace-for-any-real-deployment}
+
+services:
+  mongo:
+    image: mongo:8.2
+    command: ['--replSet', 'rs0', '--bind_ip_all']
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      # Transactions need a replica set: initiate a single-node one on first start.
+      test:
+        [
+          'CMD',
+          'mongosh',
+          '--quiet',
+          '--eval',
+          "try { rs.status().ok } catch (e) { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongo:27017' }] }).ok }",
+        ]
+      interval: 5s
+      timeout: 10s
+      retries: 30
+      start_period: 10s
+
+  mailpit:
+    image: axllent/mailpit:v1.32
+    ports:
+      - '8025:8025'
+
+  server:
+    build: ./server
+    environment:
+      <<: *api-env
+      PORT: 4000
+      TRUST_PROXY: 1
+      COOKIE_SECURE: 'false' # plain http on localhost; use https and drop this in production
+      CLIENT_ORIGIN: http://localhost:8080
+      APP_URL: http://localhost:8080
+      SMTP_URL: smtp://mailpit:1025
+      REMINDERS_CRON: '0 9 * * 1'
+      REMINDERS_TZ: Asia/Kolkata
+    volumes:
+      - uploads:/app/uploads
+    depends_on:
+      mongo:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+
+  client:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+    ports:
+      - '8080:80'
+    depends_on:
+      server:
+        condition: service_healthy
+
+  # Demo data, run on demand: docker compose --profile tools run --rm seed
+  seed:
+    profiles: [tools]
+    build:
+      context: ./server
+      target: build
+    command: ['npx', 'tsx', 'scripts/seed.ts', '--force']
+    environment:
+      <<: *api-env
+    volumes:
+      - uploads:/app/uploads
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+volumes:
+  mongo-data:
+  uploads:

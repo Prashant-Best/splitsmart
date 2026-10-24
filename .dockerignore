@@ -1,0 +1,12 @@
+# Used by the client image, whose build context is the repository root.
+**/node_modules
+**/dist
+**/coverage
+server/uploads
+server/.data
+server/.outbox
+**/.env
+.git
+.github
+.claude
+docs
