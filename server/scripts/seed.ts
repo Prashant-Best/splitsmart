@@ -9,7 +9,14 @@ import path from 'node:path';
 import mongoose from 'mongoose';
 import { config } from '../src/config';
 import { connectDb, disconnectDb } from '../src/db';
-import { Activity, Expense, Group, prepareCollections, type GroupDoc } from '../src/models';
+import {
+  Activity,
+  Expense,
+  Group,
+  prepareCollections,
+  Settlement,
+  type GroupDoc,
+} from '../src/models';
 import { attachReceipt, createExpense, updateExpense } from '../src/services/expenses';
 import { createGroup, joinGroup } from '../src/services/groups';
 import { getBalanceSummary } from '../src/services/ledger';
@@ -94,14 +101,18 @@ async function main(): Promise<void> {
       const group = (await Group.findById(groupId).lean<GroupDoc>())!;
       hour = hour >= 21 ? 10 : hour + 1;
       if (event.kind === 'settlement') {
-        await createSettlement(group, id(event.from), {
+        const settlement = await createSettlement(group, id(event.from), {
           from: id(event.from),
           to: id(event.to),
           amount: event.amount,
           method: event.method,
           note: '',
         });
-        await backdateLatest(groupId, event.date, hour);
+        const paidAt = await backdateLatest(groupId, event.date, hour);
+        await Settlement.collection.updateOne(
+          { _id: settlement._id },
+          { $set: { createdAt: paidAt, updatedAt: paidAt } },
+        );
         continue;
       }
 
@@ -117,7 +128,11 @@ async function main(): Promise<void> {
           ...toInput(event),
           version: expense.version,
         });
-        await backdateLatest(groupId, event.date, hour + 1);
+        const editedAt = await backdateLatest(groupId, event.date, hour + 1);
+        await Expense.collection.updateOne(
+          { _id: expense._id },
+          { $set: { 'history.0.editedAt': editedAt, updatedAt: editedAt } },
+        );
       }
       if (event.receipt) {
         await attachReceipt(group, id(actor), expense._id.toString(), {
