@@ -1,0 +1,6 @@
+dist
+coverage
+uploads
+.data
+.outbox
+package-lock.json
