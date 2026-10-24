@@ -8,11 +8,10 @@
  */
 export class BinaryHeap<T> {
   private readonly items: T[];
+  private readonly before: (a: T, b: T) => boolean;
 
-  constructor(
-    private readonly before: (a: T, b: T) => boolean,
-    initial: Iterable<T> = [],
-  ) {
+  constructor(before: (a: T, b: T) => boolean, initial: Iterable<T> = []) {
+    this.before = before;
     this.items = [...initial];
     for (let i = (this.items.length >> 1) - 1; i >= 0; i--) this.siftDown(i);
   }

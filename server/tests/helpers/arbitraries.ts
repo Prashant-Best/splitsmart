@@ -99,7 +99,10 @@ export const ledgerArb = fc.integer({ min: 2, max: 10 }).chain((n) => {
 
 /** Random balances for up to `maxPeople` people that sum to zero (the last one balances it). */
 export function zeroSumBalancesArb(maxPeople: number, maxAbs = 1_000_000): fc.Arbitrary<number[]> {
-  return fc
-    .array(fc.integer({ min: -maxAbs, max: maxAbs }), { minLength: 1, maxLength: maxPeople - 1 })
-    .map((values) => [...values, -values.reduce((a, b) => a + b, 0)]);
+  return (
+    fc
+      .array(fc.integer({ min: -maxAbs, max: maxAbs }), { minLength: 1, maxLength: maxPeople - 1 })
+      // 0 - sum rather than -sum, so a zero total gives 0 and not -0.
+      .map((values) => [...values, 0 - values.reduce((a, b) => a + b, 0)])
+  );
 }

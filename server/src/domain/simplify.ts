@@ -46,10 +46,11 @@ export function simplifyDebts(balances: Iterable<readonly [string, number]>): Tr
     const amount = Math.min(creditor.amount, debtor.amount);
     payments.push({ from: debtor.user, to: creditor.user, amount });
 
-    if (creditor.amount > amount)
-      creditorHeap.push({ user: creditor.user, amount: creditor.amount - amount });
-    if (debtor.amount > amount)
-      debtorHeap.push({ user: debtor.user, amount: debtor.amount - amount });
+    // The heaps hold their own copies, so the popped entries can be updated and reused.
+    creditor.amount -= amount;
+    debtor.amount -= amount;
+    if (creditor.amount > 0) creditorHeap.push(creditor);
+    if (debtor.amount > 0) debtorHeap.push(debtor);
   }
   return payments;
 }
