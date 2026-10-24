@@ -26,7 +26,7 @@ jobs:
           node-version: 24
           cache: npm
           cache-dependency-path: server/package-lock.json
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: .cache/mongodb-binaries
           key: mongodb-binaries-8.2.6-${{ runner.os }}
